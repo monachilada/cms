@@ -104,6 +104,7 @@ class UsersController extends Controller
      * Displays the login template, and handles login post requests.
      *
      * @return Response|null
+     * @throws BadRequestHttpException
      */
     public function actionLogin()
     {
@@ -120,8 +121,8 @@ class UsersController extends Controller
         // First, a little house-cleaning for expired, pending users.
         Craft::$app->getUsers()->purgeExpiredPendingUsers();
 
-        $loginName = Craft::$app->getRequest()->getBodyParam('loginName');
-        $password = Craft::$app->getRequest()->getBodyParam('password');
+        $loginName = (string)Craft::$app->getRequest()->getRequiredBodyParam('loginName');
+        $password = (string)Craft::$app->getRequest()->getRequiredBodyParam('password');
         $rememberMe = (bool)Craft::$app->getRequest()->getBodyParam('rememberMe');
 
         // Does a user exist with that username/email?
@@ -829,6 +830,9 @@ class UsersController extends Controller
         // Load the resources and render the page
         // ---------------------------------------------------------------------
 
+        // Body class
+        $bodyClass = 'edit-user';
+
         $this->getView()->registerAssetBundle(EditUserAsset::class);
 
         $userIdJs = Json::encode($user->id);
@@ -843,6 +847,7 @@ class UsersController extends Controller
             'isNewUser',
             'statusLabel',
             'actions',
+            'bodyClass',
             'title',
             'tabs',
             'selectedTab',
@@ -995,9 +1000,9 @@ class UsersController extends Controller
         $user->firstName = $request->getBodyParam('firstName', $user->firstName);
         $user->lastName = $request->getBodyParam('lastName', $user->lastName);
 
-        // If email verification is required, then new users will be saved in a pending state,
+        // New users should always be initially saved in a pending state,
         // even if an admin is doing this and opted to not send the verification email
-        if ($isNewUser && $requireEmailVerification) {
+        if ($isNewUser) {
             $user->pending = true;
         }
 
@@ -1060,6 +1065,12 @@ class UsersController extends Controller
             ]);
 
             return null;
+        }
+
+        // If this is a new user and email verification isn't required,
+        // go ahead and activate them now.
+        if ($isNewUser && !$requireEmailVerification) {
+            Craft::$app->getUsers()->activateUser($user);
         }
 
         // Save their preferences too

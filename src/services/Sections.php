@@ -479,7 +479,7 @@ class Sections extends Component
         }
 
         // Main section settings
-        if ($section->type !== Section::TYPE_CHANNEL) {
+        if ($section->type === Section::TYPE_SINGLE) {
             $section->propagateEntries = true;
         }
 
@@ -915,7 +915,7 @@ class Sections extends Component
      * ---
      *
      * ```php
-     * $entryType = Craft::$app->sections->getEntryTypeByHandle('article');
+     * $entryTypes = Craft::$app->sections->getEntryTypesByHandle('article');
      * ```
      *
      * @param string $entryTypeHandle
@@ -1331,7 +1331,7 @@ class Sections extends Component
     private function _populateNewStructure(Section $section, Section $oldSection, array $oldSiteIds)
     {
         if ($oldSection->propagateEntries) {
-            $siteIds = reset($oldSiteIds);
+            $siteIds = [reset($oldSiteIds)];
         } else {
             $siteIds = $oldSiteIds;
         }

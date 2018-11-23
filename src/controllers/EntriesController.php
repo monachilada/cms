@@ -213,14 +213,20 @@ class EntriesController extends BaseEntriesController
         // Other variables
         // ---------------------------------------------------------------------
 
+        // Body class
+        $variables['bodyClass'] = 'edit-entry site--' . $site->handle;
+
         // Page title w/ revision label
-        $variables['showSites'] = (
+        $variables['showSiteLabel'] = (
             Craft::$app->getIsMultiSite() &&
-            count($section->getSiteSettings()) > 1 &&
+            count($section->getSiteSettings()) > 1
+        );
+        $variables['showSites'] = (
+            $variables['showSiteLabel'] &&
             ($section->propagateEntries || $entry->id === null)
         );
 
-        if ($variables['showSites']) {
+        if ($variables['showSiteLabel']) {
             $variables['revisionLabel'] = Craft::t('site', $entry->getSite()->name) . ' – ';
         } else {
             $variables['revisionLabel'] = '';
@@ -605,7 +611,7 @@ class EntriesController extends BaseEntriesController
         $request = Craft::$app->getRequest();
         $entryId = $request->getRequiredBodyParam('entryId');
         $siteId = $request->getBodyParam('siteId');
-        $entry = $request->getEntryById($entryId, $siteId);
+        $entry = Craft::$app->getEntries()->getEntryById($entryId, $siteId);
 
         if (!$entry) {
             throw new NotFoundHttpException('Entry not found');
